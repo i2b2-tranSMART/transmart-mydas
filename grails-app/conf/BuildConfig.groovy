@@ -18,7 +18,7 @@ grails.project.dependency.resolution = {
 
 	dependencies {
 		compile 'net.sf.opencsv:opencsv:2.3'
-		compile 'org.transmartproject:transmart-core-api:18.1-SNAPSHOT'
+		compile 'org.transmartproject:transmart-core-api:16.2'
 		compile 'uk.ac.ebi.mydas:mydas:1.7.0.transmart-16.2'
 	}
 
