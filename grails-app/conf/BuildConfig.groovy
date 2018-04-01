@@ -11,14 +11,16 @@ grails.project.dependency.resolution = {
 		mavenLocal() // Note: use 'grails maven-install' to install required plugins locally
 		grailsCentral()
 		mavenCentral()
-		mavenRepo 'http://ec2-35-170-59-132.compute-1.amazonaws.com:8080/artifactory/plugins-snapshots'
+		mavenRepo 'http://ec2-35-170-59-132.compute-1.amazonaws.com:8080/artifactory/libs-snapshots'
+		mavenRepo 'http://ec2-35-170-59-132.compute-1.amazonaws.com:8080/artifactory/libs-releases'
 		mavenRepo 'http://ec2-35-170-59-132.compute-1.amazonaws.com:8080/artifactory/plugins-releases'
+		mavenRepo 'http://ec2-35-170-59-132.compute-1.amazonaws.com:8080/artifactory/plugins-snapshots'
 		mavenRepo 'https://repo.transmartfoundation.org/content/repositories/public/'
 	}
 
 	dependencies {
 		compile 'net.sf.opencsv:opencsv:2.3'
-		compile 'org.transmartproject:transmart-core-api:16.2'
+		compile 'org.transmartproject:transmart-core-api:18.1-SNAPSHOT'
 		compile 'uk.ac.ebi.mydas:mydas:1.7.0.transmart-16.2'
 	}
 
