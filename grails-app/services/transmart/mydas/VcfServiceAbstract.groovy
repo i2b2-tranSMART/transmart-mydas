@@ -21,12 +21,11 @@ abstract class VcfServiceAbstract extends TransmartDasServiceAbstract {
         dasMethod = new DasMethodE('vcf', 'vcf', 'vcf-cv-id')
         version = '0.1'
         resource = highDimensionResourceService.getSubResourceForType 'vcf'
-        
+
         //TODO Choose correct cvId(3-d parameter) from http://www.ebi.ac.uk/ontology-lookup/browse.do?ontName=SO
         projectionName = 'cohort'
     }
 
-    @Override
     protected Collection<DasType> getTypes() {
         return null
     }
@@ -40,7 +39,7 @@ abstract class VcfServiceAbstract extends TransmartDasServiceAbstract {
             featuresPerSegment[it.chromosome].addAll(featureCreationClosure(it))
         }
     }
-    
+
     protected List<String> getCommonNotes( VcfValues val ) {
         [
             "RefSNP=" + val.rsId,
@@ -51,10 +50,10 @@ abstract class VcfServiceAbstract extends TransmartDasServiceAbstract {
             "AlleleCount=" + ( val.cohortInfo.alleleCount ?: NA ),
             "TotalAllele=" + ( val.cohortInfo.totalAlleleCount ?: NA ),
             "GenomicVariantTypes=" + val.cohortInfo.genomicVariantTypes.findAll().join(','),
-            
+
             "VariantClassification=" + ( val.infoFields['VC'] ?: NA ),
             "QualityOfDepth=" + ( val.qualityOfDepth ?: NA ),
-            
+
             "BaseQRankSum=" + ( val.infoFields['BaseQRankSum'] ?: NA ),
             "MQRankSum=" + ( val.infoFields['MQRankSum'] ?: NA ),
             "dbSNPMembership=" + ( val.infoFields['DB'] ?: "No" )
