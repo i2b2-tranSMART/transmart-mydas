@@ -8,7 +8,7 @@ grails.project.dependency.resolution = {
 	legacyResolve false
 
 	repositories {
-		mavenLocal() // Note: use 'grails maven-install' to install required plugins locally
+		mavenLocal()
 		grailsCentral()
 		mavenCentral()
 		mavenRepo 'http://ec2-35-170-59-132.compute-1.amazonaws.com:8080/artifactory/libs-snapshots'
@@ -22,6 +22,7 @@ grails.project.dependency.resolution = {
 		compile 'net.sf.opencsv:opencsv:2.3'
 		compile 'org.transmartproject:transmart-core-api:18.1-SNAPSHOT'
 		compile 'uk.ac.ebi.mydas:mydas:1.7.0.transmart-16.2'
+		test 'org.grails:grails-datastore-test-support:1.0.2-grails-2.4'
 	}
 
 	plugins {
