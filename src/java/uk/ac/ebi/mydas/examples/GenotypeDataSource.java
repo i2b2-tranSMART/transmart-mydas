@@ -1,12 +1,7 @@
 package uk.ac.ebi.mydas.examples;
 
-import java.net.URL;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-
-import javax.servlet.ServletContext;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.ac.ebi.mydas.configuration.DataSourceConfiguration;
 import uk.ac.ebi.mydas.configuration.PropertyType;
 import uk.ac.ebi.mydas.datasource.RangeHandlingAnnotationDataSource;
@@ -14,41 +9,57 @@ import uk.ac.ebi.mydas.exceptions.BadReferenceObjectException;
 import uk.ac.ebi.mydas.exceptions.CoordinateErrorException;
 import uk.ac.ebi.mydas.exceptions.DataSourceException;
 import uk.ac.ebi.mydas.exceptions.UnimplementedFeatureException;
-import uk.ac.ebi.mydas.model.*;
+import uk.ac.ebi.mydas.model.DasAnnotatedSegment;
+import uk.ac.ebi.mydas.model.DasEntryPoint;
+import uk.ac.ebi.mydas.model.DasType;
+import uk.ac.ebi.mydas.model.Range;
 
-public class GenotypeDataSource implements RangeHandlingAnnotationDataSource{
-	ServletContext svCon;
+import javax.servlet.ServletContext;
+import java.net.URL;
+import java.util.Collection;
+import java.util.Map;
+
+public class GenotypeDataSource implements RangeHandlingAnnotationDataSource {
+
+	private final Logger logger = LoggerFactory.getLogger(getClass());
+
+	ServletContext servletContext;
 	Map<String, PropertyType> globalParameters;
 	DataSourceConfiguration config;
 	GenotypeManager genotypeManager;
 
-	public void init(ServletContext servletContext,
-			Map<String, PropertyType> globalParameters,
-			DataSourceConfiguration dataSourceConfig)
-			throws DataSourceException {
-		this.svCon = servletContext;
+	public void init(ServletContext servletContext, Map<String, PropertyType> globalParameters,
+	                 DataSourceConfiguration dataSourceConfig) throws DataSourceException {
+		this.servletContext = servletContext;
 		this.globalParameters = globalParameters;
-		this.config = dataSourceConfig;
-		   String databaseUrl="";
-		   String databasePass="";
-		   String databaseUser="";
-		if (config.getDataSourceProperties().containsKey("databaseUrl")){
-			   databaseUrl=config.getDataSourceProperties().get("databaseUrl").getValue();
-		   }
-		if (config.getDataSourceProperties().containsKey("databaseUser")){
-			   databaseUser=config.getDataSourceProperties().get("databaseUser").getValue();
-		   }
-		if (config.getDataSourceProperties().containsKey("databasePass")){
-			   databasePass=config.getDataSourceProperties().get("databasePass").getValue();
-		   }
-		if(databaseUrl.equals("") || databaseUrl==null || databaseUser.equals("") || databaseUser==null|| databasePass.equals("") || databasePass==null){
+		config = dataSourceConfig;
+
+		String databaseUrl = "";
+		if (config.getDataSourceProperties().containsKey("databaseUrl")) {
+			databaseUrl = config.getDataSourceProperties().get("databaseUrl").getValue();
+		}
+
+		String databaseUser = "";
+		if (config.getDataSourceProperties().containsKey("databaseUser")) {
+			databaseUser = config.getDataSourceProperties().get("databaseUser").getValue();
+		}
+
+		String databasePass = "";
+		if (config.getDataSourceProperties().containsKey("databasePass")) {
+			databasePass = config.getDataSourceProperties().get("databasePass").getValue();
+		}
+
+		if (databaseUrl == null || databaseUrl.equals("") ||
+				databaseUser == null || databaseUser.equals("") ||
+				databasePass == null || databasePass.equals("")) {
 			throw new DataSourceException("a database url must be set such in the configuration for example: ");
 		}
 		try {
-			System.out.println("connection params="+databaseUrl+" user:"+databaseUser+" pass:"+databasePass);
-			genotypeManager=new GenotypeManager(databaseUrl, databaseUser, databasePass);
-		} catch (Exception e) {
-			e.printStackTrace();
+			logger.debug("connection params={} user:{} pass:{}", databaseUrl, databaseUser, databasePass);
+			genotypeManager = new GenotypeManager(databaseUrl, databaseUser, databasePass);
+		}
+		catch (Exception e) {
+			logger.error(e.getMessage(), e);
 		}
 	}
 
@@ -56,98 +67,65 @@ public class GenotypeDataSource implements RangeHandlingAnnotationDataSource{
 		genotypeManager.close();
 	}
 
-	public DasAnnotatedSegment getFeatures(String segmentId, int start, int stop, Integer maxbins) 
-			throws BadReferenceObjectException, CoordinateErrorException, DataSourceException {
-		if (maxbins==null)
-			maxbins=-1;
-		return genotypeManager.getSubmodelBySegmentId(segmentId, start, stop,maxbins);
-	}
-	public DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins) 
+	public DasAnnotatedSegment getFeatures(String segmentId, int start, int stop, Integer maxbins)
 			throws BadReferenceObjectException, DataSourceException {
-		if (maxbins==null)
-			maxbins=-1;
-		return genotypeManager.getSubmodelBySegmentId(segmentId, -1, -1,maxbins);
-	}
-
-	
-	private boolean lookInside(DasComponentFeature component,String featureId,Collection<DasAnnotatedSegment> segmentsResponse,DasAnnotatedSegment segment) throws DataSourceException{
-		if (component.hasSubParts()){
-			for (DasComponentFeature subcomponent: component.getReportableSubComponents()){
-				if(subcomponent.getFeatureId().equals(featureId)){
-					segmentsResponse.add(new DasAnnotatedSegment(segment.getSegmentId(),segment.getStartCoordinate(),segment.getStopCoordinate(),segment.getVersion(),segment.getSegmentLabel(),Collections.singleton((DasFeature)subcomponent)));
-					return true;
-				}else
-					if(this.lookInside(subcomponent, featureId, segmentsResponse, segment))
-						return true;
-			}
+		if (maxbins == null) {
+			maxbins = -1;
 		}
-		return false;
+		return genotypeManager.getSubmodelBySegmentId(segmentId, start, stop, maxbins);
 	}
 
-	public Collection<DasType> getTypes() throws DataSourceException {
+	public DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins)
+			throws BadReferenceObjectException, DataSourceException {
+		if (maxbins == null) {
+			maxbins = -1;
+		}
+		return genotypeManager.getSubmodelBySegmentId(segmentId, -1, -1, maxbins);
+	}
+
+	public Collection<DasType> getTypes() {
 		return genotypeManager.getTypes();
 	}
-	public URL getLinkURL(String field, String id)
-			throws UnimplementedFeatureException, DataSourceException {
+
+	public URL getLinkURL(String field, String id) throws UnimplementedFeatureException {
 		throw new UnimplementedFeatureException("No implemented");
 	}
 
+	public String getEntryPointVersion() {
+		return genotypeManager.getDatabase();
+	}
 
-    public String getEntryPointVersion() throws UnimplementedFeatureException, DataSourceException {
-        return genotypeManager.getDatabase();
-    }
-
-   
-
-    public Integer getTotalCountForType(DasType type)
-			throws DataSourceException {
+	public Integer getTotalCountForType(DasType type) throws DataSourceException {
 		return genotypeManager.getTotalCountForType(type.getId());
 	}
 
-	@Override
-	public DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins,
-			Range rows) throws BadReferenceObjectException,
-			DataSourceException, UnimplementedFeatureException {
-		//  Auto-generated method stub
+	public DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins, Range rows)
+			throws BadReferenceObjectException, DataSourceException, UnimplementedFeatureException {
 		return null;
 	}
 
-	@Override
-	public Collection<DasAnnotatedSegment> getFeatures(
-			Collection<String> featureIdCollection, Integer maxbins, Range rows)
+	public Collection<DasAnnotatedSegment> getFeatures(Collection<String> featureIdCollection,
+	                                                   Integer maxbins, Range rows)
 			throws UnimplementedFeatureException, DataSourceException {
-		//  Auto-generated method stub
 		return null;
 	}
 
-	@Override
-	public DasAnnotatedSegment getFeatures(String segmentId, int start,
-			int stop, Integer maxbins, Range rows)
+	public DasAnnotatedSegment getFeatures(String segmentId, int start, int stop, Integer maxbins, Range rows)
 			throws BadReferenceObjectException, CoordinateErrorException,
 			DataSourceException, UnimplementedFeatureException {
-		//  Auto-generated method stub
 		return null;
 	}
 
-	@Override
-	public Collection<DasAnnotatedSegment> getFeatures(
-			Collection<String> featureIdCollection, Integer maxbins)
+	public Collection<DasAnnotatedSegment> getFeatures(Collection<String> featureIdCollection, Integer maxbins)
 			throws UnimplementedFeatureException, DataSourceException {
-		//  Auto-generated method stub
 		return null;
 	}
 
-	@Override
-	public Collection<DasEntryPoint> getEntryPoints(Integer start, Integer stop)
-			throws UnimplementedFeatureException, DataSourceException {
-		//  Auto-generated method stub
+	public Collection<DasEntryPoint> getEntryPoints(Integer start, Integer stop) {
 		return null;
 	}
 
-	@Override
-	public int getTotalEntryPoints() throws UnimplementedFeatureException,
-			DataSourceException {
-		//  Auto-generated method stub
+	public int getTotalEntryPoints() {
 		return 0;
 	}
 }

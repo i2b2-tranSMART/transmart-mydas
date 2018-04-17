@@ -1,110 +1,106 @@
 package org.transmartproject.das.mydas
 
-import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 import transmart.mydas.AcghService
 import uk.ac.ebi.mydas.configuration.DataSourceConfiguration
 import uk.ac.ebi.mydas.configuration.PropertyType
-import uk.ac.ebi.mydas.datasource.RangeHandlingAnnotationDataSource
 import uk.ac.ebi.mydas.exceptions.BadReferenceObjectException
 import uk.ac.ebi.mydas.exceptions.CoordinateErrorException
 import uk.ac.ebi.mydas.exceptions.DataSourceException
 import uk.ac.ebi.mydas.exceptions.UnimplementedFeatureException
-import uk.ac.ebi.mydas.model.*
+import uk.ac.ebi.mydas.model.DasAnnotatedSegment
+import uk.ac.ebi.mydas.model.DasEntryPoint
+import uk.ac.ebi.mydas.model.DasType
+import uk.ac.ebi.mydas.model.Range
 
 import javax.servlet.ServletContext
 
 /**
- * Created with IntelliJ IDEA.
- * User: Ruslan Forostianov
- * Date: 31/07/2013
- * Time: 10:31
- * To change this template use File | Settings | File Templates.
+ * @author Ruslan Forostianov
  */
-class AcghDS implements RangeHandlingAnnotationDataSource {
+@CompileStatic
+class AcghDS extends AbstractRangeHandlingAnnotationDataSource {
 
-    AcghService acghService
-    Long resultInstanceId
-    String conceptKey
+	AcghService acghService
+	List<DasEntryPoint> entryPoints
 
-    List<DasEntryPoint> entryPoints
+	void init(ServletContext servletContext, Map<String, PropertyType> stringPropertyTypeMap,
+	          DataSourceConfiguration dataSourceConfiguration) throws DataSourceException {
+		resultInstanceId = dataSourceConfiguration.getMatcherAgainstDsn().group(1).toLong()
+		String ckEncoded = dataSourceConfiguration.getMatcherAgainstDsn().group(2)
+		if (ckEncoded) {
+			conceptKey = new String(ckEncoded.decodeBase64())
+		}
+		acghService = getBean('acghService', AcghService)
+	}
 
-    @Override
-    void init(ServletContext servletContext, Map<String, PropertyType> stringPropertyTypeMap, DataSourceConfiguration dataSourceConfiguration) throws DataSourceException {
-        resultInstanceId = dataSourceConfiguration.getMatcherAgainstDsn().group(1).toLong()
-        def ckEncoded = dataSourceConfiguration.getMatcherAgainstDsn().group(2)
-        if (ckEncoded) {
-            conceptKey = new String(ckEncoded.decodeBase64())
-        }
-        def ctx = servletContext.getAttribute(GrailsApplicationAttributes.APPLICATION_CONTEXT)
-        acghService = ctx.acghService
-    }
+	void destroy() {}
 
-    @Override
-    void destroy() {}
+	DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins)
+			throws BadReferenceObjectException, DataSourceException {
 
-    @Override
-    DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins) throws BadReferenceObjectException, DataSourceException {
-        acghService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins).first()
-    }
+		acghService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins).first()
+	}
 
-    @Override
-    Collection<DasAnnotatedSegment> getFeatures(Collection<String> segmentIds, Integer maxbins) throws UnimplementedFeatureException, DataSourceException {
-        acghService.getFeatures(resultInstanceId, conceptKey, segmentIds, maxbins)
-    }
+	Collection<DasAnnotatedSegment> getFeatures(Collection<String> segmentIds, Integer maxbins)
+			throws UnimplementedFeatureException, DataSourceException {
 
-    @Override
-    DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins, uk.ac.ebi.mydas.model.Range range) throws BadReferenceObjectException, DataSourceException, UnimplementedFeatureException {
-        acghService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins, range).first()
-    }
+		acghService.getFeatures resultInstanceId, conceptKey, segmentIds, maxbins
+	}
 
-    @Override
-    Collection<DasAnnotatedSegment> getFeatures(Collection<String> segmentIds, Integer maxbins, uk.ac.ebi.mydas.model.Range range) throws UnimplementedFeatureException, DataSourceException {
-        acghService.getFeatures(resultInstanceId, conceptKey, segmentIds, maxbins, range)
-    }
+	DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins, Range range)
+			throws BadReferenceObjectException, DataSourceException, UnimplementedFeatureException {
 
-    @Override
-    DasAnnotatedSegment getFeatures(String segmentId, int start, int stop, Integer maxbins) throws BadReferenceObjectException, CoordinateErrorException, DataSourceException {
-        return acghService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins, new uk.ac.ebi.mydas.model.Range(start, stop)).first()
-    }
+		acghService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins, range).first()
+	}
 
-    @Override
-    DasAnnotatedSegment getFeatures(String segmentId, int start, int stop, Integer maxbins, Range rows) throws BadReferenceObjectException, CoordinateErrorException, DataSourceException, UnimplementedFeatureException {
-        return acghService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins, rows).first()
-    }
+	Collection<DasAnnotatedSegment> getFeatures(Collection<String> segmentIds, Integer maxbins, Range range)
+			throws UnimplementedFeatureException, DataSourceException {
 
-    @Override
-    Collection<DasType> getTypes() throws DataSourceException {
-        acghService.acghDasTypes
-    }
+		acghService.getFeatures resultInstanceId, conceptKey, segmentIds, maxbins, range
+	}
 
-    //Optional
-    @Override
-    Integer getTotalCountForType(DasType dasType) throws DataSourceException { null }
+	DasAnnotatedSegment getFeatures(String segmentId, int start, int stop, Integer maxbins)
+			throws BadReferenceObjectException, CoordinateErrorException, DataSourceException {
 
-    //Optional
-    @Override
-    URL getLinkURL(String s, String s1) throws UnimplementedFeatureException, DataSourceException { null }
+		acghService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins, new Range(start, stop)).first()
+	}
 
-    @Override
-    Collection<DasEntryPoint> getEntryPoints(Integer start, Integer stop) throws UnimplementedFeatureException, DataSourceException {
-        getEntryPoints()
-    }
+	DasAnnotatedSegment getFeatures(String segmentId, int start, int stop, Integer maxbins, Range rows)
+			throws BadReferenceObjectException, CoordinateErrorException, DataSourceException, UnimplementedFeatureException {
 
-    @Override
-    String getEntryPointVersion() throws UnimplementedFeatureException, DataSourceException {
-        acghService.acghEntryPointVersion
-    }
+		acghService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins, rows).first()
+	}
 
-    @Override
-    int getTotalEntryPoints() throws UnimplementedFeatureException, DataSourceException {
-        getEntryPoints().size()
-    }
+	@CompileDynamic
+	Collection<DasType> getTypes() throws DataSourceException {
+		acghService.acghDasTypes
+	}
 
-    List<DasEntryPoint> getEntryPoints() {
-        if(entryPoints == null) {
-            entryPoints = acghService.getEntryPoints(resultInstanceId)
-        }
-        entryPoints
-    }
+	//Optional
+	Integer getTotalCountForType(DasType dasType) throws DataSourceException {}
 
+	//Optional
+	URL getLinkURL(String s, String s1) throws UnimplementedFeatureException, DataSourceException {}
+
+	Collection<DasEntryPoint> getEntryPoints(Integer start, Integer stop)
+			throws UnimplementedFeatureException, DataSourceException {
+		getEntryPoints()
+	}
+
+	String getEntryPointVersion() throws UnimplementedFeatureException, DataSourceException {
+		acghService.acghEntryPointVersion
+	}
+
+	int getTotalEntryPoints() throws UnimplementedFeatureException, DataSourceException {
+		getEntryPoints().size()
+	}
+
+	List<DasEntryPoint> getEntryPoints() {
+		if (entryPoints == null) {
+			entryPoints = acghService.getEntryPoints(resultInstanceId)
+		}
+		entryPoints
+	}
 }

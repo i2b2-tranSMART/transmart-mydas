@@ -1,74 +1,57 @@
 package transmart.mydas
 
-import org.transmartproject.core.dataquery.TabularResult
-import org.transmartproject.core.dataquery.highdim.AssayColumn
-import org.transmartproject.core.dataquery.highdim.vcf.VcfValues
+import org.transmartproject.core.dataquery.assay.Assay
 import org.transmartproject.core.dataquery.highdim.chromoregion.RegionRow
-import uk.ac.ebi.mydas.exceptions.DataSourceException
-import uk.ac.ebi.mydas.exceptions.UnimplementedFeatureException
-import uk.ac.ebi.mydas.extendedmodel.DasMethodE
-import uk.ac.ebi.mydas.model.DasAnnotatedSegment
+import org.transmartproject.core.dataquery.highdim.vcf.VcfValues
 import uk.ac.ebi.mydas.model.DasFeature
 import uk.ac.ebi.mydas.model.DasFeatureOrientation
 import uk.ac.ebi.mydas.model.DasPhase
 import uk.ac.ebi.mydas.model.DasType
-import org.transmartproject.db.dataquery.highdim.vcf.*
 
 import javax.annotation.PostConstruct
 
 /**
- * Created by j.hudecek on 3-2-14.
+ * @author j.hudecek
  */
-class CohortMAFService  extends  VcfServiceAbstract {
+class CohortMAFService extends VcfServiceAbstract {
 
-    @PostConstruct
-    void init() {
-        super.init()
-        dasTypes = [projectionName];
-    }
+	static transactional = false
 
-    @Override
-    protected void getSpecificFeatures(RegionRow region, Object assays,  Map<String, String> params, Collection<DasType> dasTypes, Map<String, List<DasFeature>> featuresPerSegment) {
-       constructSegmentFeaturesMap([region], getCohortMafFeature, featuresPerSegment)
-    }
+	@PostConstruct
+	void init() {
+		super.init()
+		dasTypes = [projectionName];
+	}
 
-    private def getCohortMafFeature = { VcfValues val ->
-        def maf = val?.cohortInfo?.minorAlleleFrequency
-        if (!maf || maf <= 0) {
-            return []
-        }
+	protected void getSpecificFeatures(RegionRow region, Collection<Assay> assays, Map<String, String> params,
+	                                   Collection<DasType> dasTypes, Map<String, List<DasFeature>> featuresPerSegment) {
+		constructSegmentFeaturesMap([region], getCohortMafFeature, featuresPerSegment)
+	}
 
-        def linkMap = val.rsId == '.' ? [:]
-                : [(new URL("http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=${val.rsId}")): 'NCBI SNP Ref']
+	private Closure<List<DasFeature>> getCohortMafFeature = { VcfValues val ->
+		Double maf = val?.cohortInfo?.minorAlleleFrequency
+		if (!maf || maf <= 0) {
+			return []
+		}
 
-        [new DasFeature(
-                // feature id - any unique id that represent this feature
-                "maf-${val.rsId}",
-                // feature label
-                'Cohort Minor Allele Frequency',
-                // das type
-                new DasType('maf', "", "", ""),
-                // das method TODO: pls find out what is actually means
-                dasMethod,
-                // start pos
-                val.position.toInteger(),
-                // end pos
-                val.position.toInteger(),
-                // value - this is where Minor Allele Freq (MAF) value is placed
-                val.cohortInfo.minorAlleleFrequency,
-                DasFeatureOrientation.ORIENTATION_NOT_APPLICABLE,
-                DasPhase.PHASE_NOT_APPLICABLE,
-                //notes
-                getCommonNotes(val),
-                //links
-                linkMap,
-                //targets
-                [],
-                //parents
-                [],
-                //parts
-                []
-        )]
-    }
+		Map linkMap = val.rsId == '.' ? [:]
+				: [(new URL('http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=' + val.rsId)): 'NCBI SNP Ref']
 
+		[new DasFeature(
+				'maf-' + val.rsId, // feature id - any unique id that represent this feature
+				'Cohort Minor Allele Frequency', // feature label
+				new DasType('maf', '', '', ''), // das type
+				dasMethod, // das method TODO: pls find out what is actually means
+				val.position.toInteger(), // start pos
+				val.position.toInteger(), // end pos
+				val.cohortInfo.minorAlleleFrequency, // value - this is where Minor Allele Freq (MAF) value is placed
+				DasFeatureOrientation.ORIENTATION_NOT_APPLICABLE,
+				DasPhase.PHASE_NOT_APPLICABLE,
+				getCommonNotes(val), // notes
+				linkMap, // links
+				[], // targets
+				[], // parents
+				[]) // parts
+		]
+	}
 }

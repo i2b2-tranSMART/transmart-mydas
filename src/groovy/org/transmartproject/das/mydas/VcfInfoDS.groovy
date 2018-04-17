@@ -1,10 +1,9 @@
 package org.transmartproject.das.mydas
 
-import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes
+import groovy.transform.CompileStatic
 import transmart.mydas.VcfServiceAbstract
 import uk.ac.ebi.mydas.configuration.DataSourceConfiguration
 import uk.ac.ebi.mydas.configuration.PropertyType
-import uk.ac.ebi.mydas.datasource.RangeHandlingAnnotationDataSource
 import uk.ac.ebi.mydas.exceptions.BadReferenceObjectException
 import uk.ac.ebi.mydas.exceptions.CoordinateErrorException
 import uk.ac.ebi.mydas.exceptions.DataSourceException
@@ -12,101 +11,95 @@ import uk.ac.ebi.mydas.exceptions.UnimplementedFeatureException
 import uk.ac.ebi.mydas.model.DasAnnotatedSegment
 import uk.ac.ebi.mydas.model.DasEntryPoint
 import uk.ac.ebi.mydas.model.DasType
+import uk.ac.ebi.mydas.model.Range
 
 import javax.servlet.ServletContext
 
 /**
- * Created by j.hudecek on 18-3-14.
+ * @author j.hudecek
  */
-class VcfInfoDS implements RangeHandlingAnnotationDataSource {
-    String infoField
-    VcfServiceAbstract vcfService
-    Long resultInstanceId
-    String conceptKey
+@CompileStatic
+class VcfInfoDS extends AbstractRangeHandlingAnnotationDataSource {
 
-    List<DasEntryPoint> entryPoints
+	String infoField
+	VcfServiceAbstract vcfService
 
-    @Override
-    void init(ServletContext servletContext, Map<String, PropertyType> stringPropertyTypeMap, DataSourceConfiguration dataSourceConfiguration) throws DataSourceException {
-        infoField = dataSourceConfiguration.getMatcherAgainstDsn().group(1)
-        resultInstanceId = dataSourceConfiguration.getMatcherAgainstDsn().group(2).toLong()
-        def ckEncoded = dataSourceConfiguration.getMatcherAgainstDsn().group(3)
-        if (ckEncoded) {
-            conceptKey = new String(ckEncoded.decodeBase64())
-        }
-        vcfService = servletContext.getAttribute(GrailsApplicationAttributes.APPLICATION_CONTEXT).vcfInfoService;
-    }
+	List<DasEntryPoint> entryPoints
 
-    @Override
-    void destroy() {
+	void init(ServletContext servletContext, Map<String, PropertyType> stringPropertyTypeMap,
+	          DataSourceConfiguration dataSourceConfiguration) throws DataSourceException {
+		infoField = dataSourceConfiguration.getMatcherAgainstDsn().group(1)
+		resultInstanceId = dataSourceConfiguration.getMatcherAgainstDsn().group(2).toLong()
+		String ckEncoded = dataSourceConfiguration.getMatcherAgainstDsn().group(3)
+		if (ckEncoded) {
+			conceptKey = new String(ckEncoded.decodeBase64())
+		}
+		vcfService = service('vcfInfoService')
+	}
 
-    }
+	void destroy() {}
 
-    @Override
-    DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins) throws BadReferenceObjectException, DataSourceException {
-        vcfService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins, null, ['infoField':infoField]).first()
-    }
+	DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins)
+			throws BadReferenceObjectException, DataSourceException {
 
-    @Override
-    DasAnnotatedSegment getFeatures(String segmentId, int start, int stop, Integer maxbins) throws BadReferenceObjectException, CoordinateErrorException, DataSourceException {
-        vcfService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins, new uk.ac.ebi.mydas.model.Range(start, stop), ['infoField':infoField]).first()
-    }
+		vcfService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins,
+				null, [infoField: infoField]).first()
+	}
 
-    @Override
-    DasAnnotatedSegment getFeatures(String segmentId, int start, int stop, Integer maxbins, uk.ac.ebi.mydas.model.Range range) throws BadReferenceObjectException, CoordinateErrorException, DataSourceException, UnimplementedFeatureException {
-        vcfService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins, range, ['infoField':infoField]).first()
-    }
+	DasAnnotatedSegment getFeatures(String segmentId, int start, int stop, Integer maxbins)
+			throws BadReferenceObjectException, CoordinateErrorException, DataSourceException {
 
+		vcfService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins,
+				new Range(start, stop), [infoField: infoField]).first()
+	}
 
+	DasAnnotatedSegment getFeatures(String segmentId, int start, int stop,
+	                                Integer maxbins, Range range)
+			throws BadReferenceObjectException, CoordinateErrorException,
+					DataSourceException, UnimplementedFeatureException {
 
-    @Override
-    DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins, uk.ac.ebi.mydas.model.Range range) throws BadReferenceObjectException, DataSourceException, UnimplementedFeatureException {
-        vcfService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins, range, ['infoField':infoField]).first()
-    }
+		vcfService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins,
+				range, [infoField: infoField]).first()
+	}
 
-    @Override
-    Collection<DasAnnotatedSegment> getFeatures(Collection<String> segmentIds, Integer maxbins, uk.ac.ebi.mydas.model.Range range) throws UnimplementedFeatureException, DataSourceException {
-        vcfService.getFeatures(resultInstanceId, conceptKey, segmentIds, maxbins, range, ['infoField':infoField])
-    }
+	DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins, Range range)
+			throws BadReferenceObjectException, DataSourceException, UnimplementedFeatureException {
 
-    @Override
-    Collection<DasAnnotatedSegment> getFeatures(Collection<String> segmentIds, Integer maxbins) throws UnimplementedFeatureException, DataSourceException {
-        vcfService.getFeatures(resultInstanceId, conceptKey, segmentIds, maxbins, null, ['infoField':infoField])
-    }
+		vcfService.getFeatures(resultInstanceId, conceptKey, [segmentId], maxbins,
+				range, [infoField: infoField]).first()
+	}
 
-    @Override
-    Collection<DasType> getTypes() throws DataSourceException {
-        // TODO
-        return null
-    }
+	Collection<DasAnnotatedSegment> getFeatures(Collection<String> segmentIds, Integer maxbins,
+	                                            Range range)
+			throws UnimplementedFeatureException, DataSourceException {
 
-    @Override
-    Integer getTotalCountForType(DasType dasType) throws DataSourceException {
-        // TODO
-        return null
-    }
+		vcfService.getFeatures(resultInstanceId, conceptKey, segmentIds, maxbins,
+				range, [infoField: infoField])
+	}
 
-    @Override
-    URL getLinkURL(String field, String id) throws UnimplementedFeatureException, DataSourceException {
-        // TODO
-        return null
-    }
+	Collection<DasAnnotatedSegment> getFeatures(Collection<String> segmentIds, Integer maxbins)
+			throws UnimplementedFeatureException, DataSourceException {
 
-    @Override
-    Collection<DasEntryPoint> getEntryPoints(Integer integer, Integer integer2) throws UnimplementedFeatureException, DataSourceException {
-        // TODO
-        return null
-    }
+		vcfService.getFeatures(resultInstanceId, conceptKey, segmentIds, maxbins,
+				null, [infoField: infoField])
+	}
 
-    @Override
-    String getEntryPointVersion() throws UnimplementedFeatureException, DataSourceException {
-        // TODO
-        return null
-    }
+	// TODO
+	Collection<DasType> getTypes() throws DataSourceException {}
 
-    @Override
-    int getTotalEntryPoints() throws UnimplementedFeatureException, DataSourceException {
-        // TODO
-        return 0
-    }
+	// TODO
+	Integer getTotalCountForType(DasType dasType) throws DataSourceException {}
+
+	// TODO
+	URL getLinkURL(String field, String id) throws UnimplementedFeatureException, DataSourceException {}
+
+	// TODO
+	Collection<DasEntryPoint> getEntryPoints(Integer integer, Integer integer2)
+			throws UnimplementedFeatureException, DataSourceException {}
+
+	// TODO
+	String getEntryPointVersion() throws UnimplementedFeatureException, DataSourceException {}
+
+	// TODO
+	int getTotalEntryPoints() throws UnimplementedFeatureException, DataSourceException { 0 }
 }

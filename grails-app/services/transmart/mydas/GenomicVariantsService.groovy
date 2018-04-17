@@ -1,74 +1,65 @@
 package transmart.mydas
 
+import org.transmartproject.core.dataquery.assay.Assay
 import org.transmartproject.core.dataquery.highdim.chromoregion.RegionRow
+import org.transmartproject.core.dataquery.highdim.vcf.GenomicVariantType
 import org.transmartproject.core.dataquery.highdim.vcf.VcfValues
 import uk.ac.ebi.mydas.model.DasFeature
-import uk.ac.ebi.mydas.model.DasType
 import uk.ac.ebi.mydas.model.DasFeatureOrientation
 import uk.ac.ebi.mydas.model.DasPhase
+import uk.ac.ebi.mydas.model.DasType
 
 import javax.annotation.PostConstruct
 
 /**
- * Created by j.hudecek on 6-3-14.
+ * @author j.hudecek
  */
-class GenomicVariantsService  extends  VcfServiceAbstract {
+class GenomicVariantsService extends VcfServiceAbstract {
 
-    @PostConstruct
-    void init() {
-        super.init()
-        dasTypes = [projectionName];
-    }
+	static transactional = false
 
-    @Override
-    protected void getSpecificFeatures(RegionRow region, Object assays,  Map<String, String> params, Collection<DasType> dasTypes, Map<String, List<DasFeature>> featuresPerSegment) {
-        constructSegmentFeaturesMap([region], getGenomicTypeFeature, featuresPerSegment)
-    }
+	@PostConstruct
+	void init() {
+		super.init()
+		dasTypes = [projectionName];
+	}
 
-    private def getGenomicTypeFeature = { VcfValues val ->
+	protected void getSpecificFeatures(RegionRow region, Collection<Assay> assays, Map<String, String> params,
+	                                   Collection<DasType> dasTypes, Map<String, List<DasFeature>> featuresPerSegment) {
+		constructSegmentFeaturesMap([region], getGenomicTypeFeature, featuresPerSegment)
+	}
 
-        def linkMap = val.rsId == '.' ? [:]
-                : [(new URL("http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=${val.rsId}")): 'NCBI SNP Ref']
+	private Closure<List<DasFeature>> getGenomicTypeFeature = { VcfValues val ->
 
-        def results = []
-        val.cohortInfo.genomicVariantTypes.eachWithIndex { genomicVariantType, indx ->
-            if( !genomicVariantType )
-                return
-                
-            results << new DasFeature(
-                    // feature id - any unique id that represent this feature
-                    "gv-${val.rsId}-$genomicVariantType",
-                    // feature label
-                    'Genomic Variant Type',
-                    // das type
-                    new DasType(genomicVariantType.toString(), "", "", ""),
-                    // das method TODO: pls find out what is actually means
-                    dasMethod,
-                    // start pos
-                    val.position.toInteger(),
-                    // end pos
-                    val.position.toInteger(),
-                    // value - this is where Minor Allele Freq (MAF) value is placed
-                    null,
-                    DasFeatureOrientation.ORIENTATION_NOT_APPLICABLE,
-                    DasPhase.PHASE_NOT_APPLICABLE,
-                    //notes
-                    getCommonNotes(val) + 
-                    [
-                        "CurrentALT=" + val.cohortInfo.alleles[ indx ],
-                        "Type=" + genomicVariantType,
-                    ],
-                    //links
-                    linkMap,
-                    //targets
-                    [],
-                    //parents
-                    [],
-                    //parts
-                    []
-            )
-        }
+		Map linkMap = val.rsId == '.' ? [:]
+				: [(new URL('http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=' + val.rsId)): 'NCBI SNP Ref']
 
-        results
-    }
+		List<DasFeature> results = []
+		val.cohortInfo.genomicVariantTypes.eachWithIndex { GenomicVariantType genomicVariantType, int index ->
+			if (!genomicVariantType) {
+				return
+			}
+
+			results << new DasFeature(
+					'gv-' + val.rsId + '-' + genomicVariantType, // feature id - any unique id that represent this feature
+					'Genomic Variant Type', // feature label
+					new DasType(genomicVariantType.toString(), '', '', ''), // das type
+					dasMethod, // das method TODO: pls find out what is actually means
+					val.position.toInteger(), // start pos
+					val.position.toInteger(), // end pos
+					null, // value - this is where Minor Allele Freq (MAF) value is placed
+					DasFeatureOrientation.ORIENTATION_NOT_APPLICABLE,
+					DasPhase.PHASE_NOT_APPLICABLE,
+					//notes
+					getCommonNotes(val) + [
+									'CurrentALT=' + val.cohortInfo.alleles[index],
+									'Type=' + genomicVariantType],
+					linkMap, // links
+					[], // targets
+					[], // parents
+					[]) // parts
+		}
+
+		results
+	}
 }

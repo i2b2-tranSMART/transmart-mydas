@@ -20,12 +20,8 @@
  * http://code.google.com/p/mydas/
  *
  */
-
 package uk.ac.ebi.mydas.template;
 
-
-
-import javax.servlet.ServletContext;
 
 import uk.ac.ebi.mydas.configuration.DataSourceConfiguration;
 import uk.ac.ebi.mydas.configuration.PropertyType;
@@ -38,15 +34,12 @@ import uk.ac.ebi.mydas.model.DasEntryPoint;
 import uk.ac.ebi.mydas.model.DasType;
 import uk.ac.ebi.mydas.model.Range;
 
+import javax.servlet.ServletContext;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
 
 /**
- * Created Using IntelliJ IDEA.
- * Date: 18-Jul-2007
- * Time: 16:51:37
- *
  * @author Phil Jones, EMBL-EBI, pjones@ebi.ac.uk
  *
  * NOTE TO DATA SOURCE DEVELOPERS:
@@ -56,18 +49,17 @@ import java.util.Map;
  * more appropriate for your needs, described here:
  *
  * <a href="http://code.google.com/p/mydas/wiki/HOWTO_WritePluginIntro">
- *     Writing a MyDas Data Source - Selecting the Best Inteface
- * </a> 
+ * Writing a MyDas Data Source - Selecting the Best Inteface
+ * </a>
  */
 public class TemplateAnnotationDataSource implements AnnotationDataSource {
 
-	ServletContext svCon;
+	ServletContext servletContext;
 	Map<String, PropertyType> globalParameters;
 	DataSourceConfiguration config;
 
-
 	/**
-	 * This method is called by the MydasServlet class at Servlet initialisation.
+	 * Called by the MydasServlet class at Servlet initialisation.
 	 * <p/>
 	 * The AnnotationDataSource is passed the servletContext, a handle to globalParameters in the
 	 * form of a Map &lt;String, String&gt; and a DataSourceConfiguration object.
@@ -87,28 +79,22 @@ public class TemplateAnnotationDataSource implements AnnotationDataSource {
 	 *                         as defined in the ServerConfig.xml file.
 	 * @param dataSourceConfig containing the pertinent information frmo the ServerConfig.xml
 	 *                         file for this datasource, including (optionally) a Map of datasource specific configuration.
-	 * @throws uk.ac.ebi.mydas.exceptions.DataSourceException
-	 *          should be thrown if there is any
-	 *          fatal problem with loading this data source.  <bold>It is highly desirable
-	 *          for the implementation to test itself in this init method and throw
-	 *          a DataSourceException if it fails, e.g. to attempt to get a Connection to a database
-	 *          and read a record.</bold>
 	 */
-	public void init(ServletContext servletContext, Map<String, PropertyType> globalParameters, DataSourceConfiguration dataSourceConfig) throws DataSourceException {
-		this.svCon = servletContext;
+	public void init(ServletContext servletContext, Map<String, PropertyType> globalParameters,
+	                 DataSourceConfiguration dataSourceConfig) {
+		this.servletContext = servletContext;
 		this.globalParameters = globalParameters;
-		this.config = dataSourceConfig;
+		config = dataSourceConfig;
 	}
 
 	/**
-	 * This method is called when the DAS server is shut down and should be used
+	 * Called when the DAS server is shut down and should be used
 	 * to clean up resources such as database connections as required.
 	 */
-	public void destroy() {
-	}
+	public void destroy() {}
 
 	/**
-	 * This method returns a List of DasAnnotatedSegment objects, describing the annotated segment and the features
+	 * Returns a List of DasAnnotatedSegment objects, describing the annotated segment and the features
 	 * of the segmentId passed in as argument.
 	 *
 	 * @param segmentId being the reference of the segment requested in the DAS request (not including
@@ -123,19 +109,17 @@ public class TemplateAnnotationDataSource implements AnnotationDataSource {
 	 *                  interface.  It will then be the responsibility of your AnnotationDataSource plugin to
 	 *                  restrict the features returned for the requested range.
 	 * @return A DasAnnotatedSegment object.  This describes the segment that is annotated, limited
-	 *         to the information required for the /DASGFF/GFF/SEGMENT element.  References a Collection of
-	 *         DasFeature objects.   Note that this is a basic Collection - this gives you complete control over the details
-	 *         of the Collection type - so you can create your own comparators etc.
-	 * @throws uk.ac.ebi.mydas.exceptions.BadReferenceObjectException
-	 *          in the event that your server does not include information about this segment.
-	 * @throws uk.ac.ebi.mydas.exceptions.DataSourceException
-	 *          should be thrown if there is any
-	 *          fatal problem with loading this data source.  <bold>It is highly desirable
-	 *          for the implementation to test itself in this init method and throw
-	 *          a DataSourceException if it fails, e.g. to attempt to get a Connection to a database
-	 *          and read a record.</bold>
+	 * to the information required for the /DASGFF/GFF/SEGMENT element.  References a Collection of
+	 * DasFeature objects.   Note that this is a basic Collection - this gives you complete control over the details
+	 * of the Collection type - so you can create your own comparators etc.
+	 * @throws uk.ac.ebi.mydas.exceptions.BadReferenceObjectException in the event that your server does not include information about this segment.
+	 * @throws uk.ac.ebi.mydas.exceptions.DataSourceException         should be thrown if there is any
+	 *                                                                fatal problem with loading this data source.  <bold>It is highly desirable
+	 *                                                                for the implementation to test itself in this init method and throw
+	 *                                                                a DataSourceException if it fails, e.g. to attempt to get a Connection to a database
+	 *                                                                and read a record.</bold>
 	 */
-	public DasAnnotatedSegment getFeatures(String segmentId,Integer maxbins) throws BadReferenceObjectException, DataSourceException {
+	public DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins) throws BadReferenceObjectException, DataSourceException {
 		return null;
 	}
 
@@ -147,14 +131,8 @@ public class TemplateAnnotationDataSource implements AnnotationDataSource {
 	 * For some data sources it may be desirable to populate this Collection from a configuration file or to
 	 *
 	 * @return a Collection of DasType objects - one for each type id described by the data source.
-	 * @throws uk.ac.ebi.mydas.exceptions.DataSourceException
-	 *          should be thrown if there is any
-	 *          fatal problem with loading this data source.  <bold>It is highly desirable
-	 *          for the implementation to test itself in this init method and throw
-	 *          a DataSourceException if it fails, e.g. to attempt to get a Connection to a database
-	 *          and read a record.</bold>
 	 */
-	public Collection<DasType> getTypes() throws DataSourceException {
+	public Collection<DasType> getTypes() {
 		return null;
 	}
 
@@ -186,22 +164,19 @@ public class TemplateAnnotationDataSource implements AnnotationDataSource {
 	 * @param featureIdCollection a Collection&lt;String&gt; of feature_id values included in the features command / request.
 	 *                            May be a <code>java.util.Collections.EMPTY_LIST</code> but will <b>not</b> be null.
 	 * @return A Collection of {@link uk.ac.ebi.mydas.model.DasAnnotatedSegment} objects. These describe the segments that is annotated, limited
-	 *         to the information required for the /DASGFF/GFF/SEGMENT element.  Each References a Collection of
-	 *         DasFeature objects.   Note that this is a basic Collection - this gives you complete control over the details
-	 *         of the Collection type - so you can create your own comparators etc.
-	 * @throws uk.ac.ebi.mydas.exceptions.DataSourceException
-	 *          should be thrown if there is any
-	 *          fatal problem with loading this data source.  <bold>It is highly desirable for the
-	 *          implementation to test itself in this init method and throw
-	 *          a DataSourceException if it fails, e.g. to attempt to get a Connection to a database
-	 *          and read a record.</bold>
-	 * @throws uk.ac.ebi.mydas.exceptions.UnimplementedFeatureException
-	 *          Throw this if you cannot
-	 *          provide a working implementation of this method.
+	 * to the information required for the /DASGFF/GFF/SEGMENT element.  Each References a Collection of
+	 * DasFeature objects.   Note that this is a basic Collection - this gives you complete control over the details
+	 * of the Collection type - so you can create your own comparators etc.
+	 * @throws uk.ac.ebi.mydas.exceptions.DataSourceException           should be thrown if there is any
+	 *                                                                  fatal problem with loading this data source.  <bold>It is highly desirable for the
+	 *                                                                  implementation to test itself in this init method and throw
+	 *                                                                  a DataSourceException if it fails, e.g. to attempt to get a Connection to a database
+	 *                                                                  and read a record.</bold>
+	 * @throws uk.ac.ebi.mydas.exceptions.UnimplementedFeatureException Throw this if you cannot
+	 *                                                                  provide a working implementation of this method.
 	 */
 	public Collection<DasAnnotatedSegment> getFeatures(Collection<String> featureIdCollection, Integer maxbins)
-	throws UnimplementedFeatureException, DataSourceException {
-		//  Auto-generated method stub
+			throws UnimplementedFeatureException, DataSourceException {
 		return null;
 	}
 
@@ -214,16 +189,10 @@ public class TemplateAnnotationDataSource implements AnnotationDataSource {
 	 *             (type id and optionally the method id and category id.  Note that the last two may
 	 *             be null, which needs to be taken into account by the implementation.)
 	 * @return The total count <i>across the entire data source</i> (not
-	 *         just for one segment) for the specified type.  If it is not possible to determine
-	 *         this count, this method should return <code>null</code>.
-	 * @throws uk.ac.ebi.mydas.exceptions.DataSourceException
-	 *          should be thrown if there is any
-	 *          fatal problem with loading this data source.  <bold>It is highly desirable for the
-	 *          implementation to test itself in this init method and throw
-	 *          a DataSourceException if it fails, e.g. to attempt to get a Connection to a database
-	 *          and read a record.</bold>
+	 * just for one segment) for the specified type.  If it is not possible to determine
+	 * this count, this method should return <code>null</code>.
 	 */
-	public Integer getTotalCountForType(DasType type) throws DataSourceException {
+	public Integer getTotalCountForType(DasType type) {
 		return null;
 	}
 
@@ -258,47 +227,30 @@ public class TemplateAnnotationDataSource implements AnnotationDataSource {
 	 *              specification
 	 * @param id    being the ID of the indicated annotation field
 	 * @return a valid URL.
-	 * @throws uk.ac.ebi.mydas.exceptions.UnimplementedFeatureException
-	 *          in the event that the DAS data source
-	 *          does not implement the link command
-	 * @throws uk.ac.ebi.mydas.exceptions.DataSourceException
-	 *          should be thrown if there is any
-	 *          fatal problem with loading this data source.  <bold>It is highly desirable for the implementation
-	 *          to test itself in this init method and throw
-	 *          a DataSourceException if it fails, e.g. to attempt to get a Connection to a database
-	 *          and read a record.</bold>
 	 */
-	public URL getLinkURL(String field, String id) throws UnimplementedFeatureException, DataSourceException {
+	public URL getLinkURL(String field, String id) {
 		return null;
 	}
 
-    public Collection<DasEntryPoint> getEntryPoints(Integer start, Integer stop) throws UnimplementedFeatureException, DataSourceException {
-        throw new UnimplementedFeatureException("No implemented");
-    }
+	public Collection<DasEntryPoint> getEntryPoints(Integer start, Integer stop) throws UnimplementedFeatureException {
+		throw new UnimplementedFeatureException("No implemented");
+	}
 
-    public String getEntryPointVersion() throws UnimplementedFeatureException, DataSourceException {
-        throw new UnimplementedFeatureException("No implemented");
-    }
+	public String getEntryPointVersion() throws UnimplementedFeatureException {
+		throw new UnimplementedFeatureException("No implemented");
+	}
 
-    public int getTotalEntryPoints() throws UnimplementedFeatureException, DataSourceException {
-        throw new UnimplementedFeatureException("No implemented");
-    }
+	public int getTotalEntryPoints() throws UnimplementedFeatureException {
+		throw new UnimplementedFeatureException("No implemented");
+	}
 
-	@Override
-	public DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins,
-			Range rows) throws BadReferenceObjectException,
-			DataSourceException, UnimplementedFeatureException {
-		//  Auto-generated method stub
+	public DasAnnotatedSegment getFeatures(String segmentId, Integer maxbins, Range rows)
+			throws BadReferenceObjectException, DataSourceException, UnimplementedFeatureException {
 		return null;
 	}
 
-	@Override
-	public Collection<DasAnnotatedSegment> getFeatures(
-			Collection<String> featureIdCollection, Integer maxbins, Range rows)
+	public Collection<DasAnnotatedSegment> getFeatures(Collection<String> featureIdCollection, Integer maxbins, Range rows)
 			throws UnimplementedFeatureException, DataSourceException {
-		//  Auto-generated method stub
 		return null;
 	}
-
-
 }
