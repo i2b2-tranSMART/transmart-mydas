@@ -1,9 +1,11 @@
 package org.transmartproject.das.mydas
 
+import grails.util.Holders
 import groovy.transform.CompileStatic
 import transmart.mydas.VcfServiceAbstract
 import uk.ac.ebi.mydas.configuration.DataSourceConfiguration
 import uk.ac.ebi.mydas.configuration.PropertyType
+import uk.ac.ebi.mydas.datasource.RangeHandlingAnnotationDataSource
 import uk.ac.ebi.mydas.exceptions.BadReferenceObjectException
 import uk.ac.ebi.mydas.exceptions.CoordinateErrorException
 import uk.ac.ebi.mydas.exceptions.DataSourceException
@@ -19,10 +21,12 @@ import javax.servlet.ServletContext
  * @author j.hudecek
  */
 @CompileStatic
-class VcfDS extends AbstractRangeHandlingAnnotationDataSource {
+class VcfDS implements RangeHandlingAnnotationDataSource {
 
 	VcfServiceAbstract vcfService
 	List<DasEntryPoint> entryPoints
+	Long resultInstanceId
+	String conceptKey
 
 	void init(ServletContext servletContext, Map<String, PropertyType> stringPropertyTypeMap,
 	          DataSourceConfiguration dataSourceConfiguration) throws DataSourceException {
@@ -93,4 +97,12 @@ class VcfDS extends AbstractRangeHandlingAnnotationDataSource {
 
 	// TODO
 	int getTotalEntryPoints() throws UnimplementedFeatureException, DataSourceException { 0 }
+
+	protected <T> T getBean(String name, Class<T> clazz) {
+		Holders.applicationContext.getBean name, clazz
+	}
+
+	protected VcfServiceAbstract service(String name) {
+		getBean name, VcfServiceAbstract
+	}
 }

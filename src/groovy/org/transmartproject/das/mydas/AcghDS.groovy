@@ -1,10 +1,12 @@
 package org.transmartproject.das.mydas
 
+import grails.util.Holders
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import transmart.mydas.AcghService
 import uk.ac.ebi.mydas.configuration.DataSourceConfiguration
 import uk.ac.ebi.mydas.configuration.PropertyType
+import uk.ac.ebi.mydas.datasource.RangeHandlingAnnotationDataSource
 import uk.ac.ebi.mydas.exceptions.BadReferenceObjectException
 import uk.ac.ebi.mydas.exceptions.CoordinateErrorException
 import uk.ac.ebi.mydas.exceptions.DataSourceException
@@ -20,10 +22,12 @@ import javax.servlet.ServletContext
  * @author Ruslan Forostianov
  */
 @CompileStatic
-class AcghDS extends AbstractRangeHandlingAnnotationDataSource {
+class AcghDS implements RangeHandlingAnnotationDataSource {
 
 	AcghService acghService
 	List<DasEntryPoint> entryPoints
+	Long resultInstanceId
+	String conceptKey
 
 	void init(ServletContext servletContext, Map<String, PropertyType> stringPropertyTypeMap,
 	          DataSourceConfiguration dataSourceConfiguration) throws DataSourceException {
@@ -32,7 +36,7 @@ class AcghDS extends AbstractRangeHandlingAnnotationDataSource {
 		if (ckEncoded) {
 			conceptKey = new String(ckEncoded.decodeBase64())
 		}
-		acghService = getBean('acghService', AcghService)
+		acghService = Holders.applicationContext.getBean('acghService', AcghService)
 	}
 
 	void destroy() {}

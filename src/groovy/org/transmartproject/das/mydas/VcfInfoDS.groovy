@@ -1,9 +1,11 @@
 package org.transmartproject.das.mydas
 
+import grails.util.Holders
 import groovy.transform.CompileStatic
 import transmart.mydas.VcfServiceAbstract
 import uk.ac.ebi.mydas.configuration.DataSourceConfiguration
 import uk.ac.ebi.mydas.configuration.PropertyType
+import uk.ac.ebi.mydas.datasource.RangeHandlingAnnotationDataSource
 import uk.ac.ebi.mydas.exceptions.BadReferenceObjectException
 import uk.ac.ebi.mydas.exceptions.CoordinateErrorException
 import uk.ac.ebi.mydas.exceptions.DataSourceException
@@ -19,11 +21,12 @@ import javax.servlet.ServletContext
  * @author j.hudecek
  */
 @CompileStatic
-class VcfInfoDS extends AbstractRangeHandlingAnnotationDataSource {
+class VcfInfoDS implements RangeHandlingAnnotationDataSource {
 
 	String infoField
 	VcfServiceAbstract vcfService
-
+	Long resultInstanceId
+	String conceptKey
 	List<DasEntryPoint> entryPoints
 
 	void init(ServletContext servletContext, Map<String, PropertyType> stringPropertyTypeMap,
@@ -34,7 +37,7 @@ class VcfInfoDS extends AbstractRangeHandlingAnnotationDataSource {
 		if (ckEncoded) {
 			conceptKey = new String(ckEncoded.decodeBase64())
 		}
-		vcfService = service('vcfInfoService')
+		vcfService = Holders.applicationContext.getBean('vcfInfoService', VcfServiceAbstract)
 	}
 
 	void destroy() {}
